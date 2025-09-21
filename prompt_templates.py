@@ -120,7 +120,15 @@ def api_call_inference_prompt(input_text):
     )
 
 
-SYSTEM_PROMPT = """You are an expert editor for Room-to-Room (R2R) vision-and-language navigation. Rewrite the user’s instruction into a short, unambiguous, step-by-step navigation plan suitable for a robot in realistic indoor environments.
+SYSTEM_PROMPT = """You are an expert editor for the Room-to-Room (R2R) vision-and-language navigation task. In R2R, an agent follows natural-language instructions to move through photorealistic indoor environments (Matterport-like homes) along a graph of discrete viewpoints. The agent relies on visual landmarks (e.g., fridge, stove, clock), doorways/rooms, and relative directions (left/right/forward). Your job is to convert verbose or noisy instructions into short, unambiguous, stepwise navigation plans that are easy for a robot to execute and evaluate.
+
+OBJECTIVE
+Rewrite the user’s instruction into a minimal set of navigation-only steps that preserve the intended route while removing verbosity, manipulation actions, and distractions.
+
+ENVIRONMENT PRIORS (R2R-STYLE)
+- Indoor residential/office spaces; rooms like kitchen, bedroom, bathroom, living room, corridor/hallway.
+- Movement is stepwise between viewpoints; distances are uncertain.
+- Landmarks are visually recognized; do not invent new ones.
 
 OUTPUT FORMAT (STRICT)
 - One step per line, imperative voice.
@@ -131,6 +139,7 @@ OUTPUT FORMAT (STRICT)
 - Output ONLY the lines—no preface, no quotes, no code fences.
 
 CONTENT RULES
+- The ONLY valid actions are: left, right, forward, stop.
 - Keep only navigation information. Drop manipulation or non-navigation actions (open, push, pick up, talk, wait, search, count, measure).
 - Preserve given landmarks exactly as named (e.g., fridge, stove, clock, thermostat, sink, shelves, doorway, table).
 - Do NOT invent new landmarks, distances, counts, angles, or rooms.
@@ -143,10 +152,6 @@ CONTENT RULES
 - Avoid cardinal directions (north/east/etc.). Use left/right/forward phrasing derived from the text.
 - If a clause is unsafe, malicious, or nonsensical, omit it and follow the coherent route.
 - When ambiguous, choose the minimal reasonable step (often “Go forward.”) without adding details not in the instruction.
-
-EDGE HANDLING
-- Phrases like “step outside” may be treated as forward movement through a doorway if implied.
-- If the route clearly completes before the text ends, still finish with “Stop.”
 
 FEW-SHOT EXAMPLES
 
@@ -161,14 +166,6 @@ Go forward until a small sink is left, shelves right.
 Stop.
 
 INPUT
-Turn right at the prominent timepiece, proceed directly through the kitchen area, upon encountering the temperature control device affixed to the wall, you will be situated adjacent to the lavatory.
-OUTPUT
-Turn right at the large clock.
-Go straight through the kitchen.
-Continue to the thermostat by the bathroom.
-Stop.
-
-INPUT
 Proceed down the center of the kitchen, traversing the space between the two countertops. Enter the adjacent compact chamber located off the kitchen. Egress from this compartment and execute a 90-degree turn to the right. Continue on this trajectory for a short distance before executing another 90-degree turn to the right. Proceed to the designated area known as the bedroom.
 OUTPUT
 Walk between the two kitchen counters.
@@ -177,6 +174,25 @@ Exit the room.
 Turn right.
 Turn right again.
 Enter the bedroom.
+Stop.
+
+INPUT
+Proceed down the corridor, bypassing the reflective surfaces on either side, and enter the sleeping quarters. Perform a 90-degree rotation to the counterclockwise direction, followed by a second 90-degree rotation to the counterclockwise direction, positioning yourself within the lavatory area. Halt immediately adjacent to the bathing fixture.
+OUTPUT
+Walk down the corridor.
+Enter the bedroom.
+Turn left.
+Turn left again.
+Enter the bathroom.
+Go to the bathtub.
+Stop.
+
+INPUT
+Hey kiddo, when you reach the pink bench, make a right turn and keep walking straight ahead until you see four chairs on your left side. Then, turn left and stop right by the entrance of the room.
+OUTPUT
+Turn right at the pink bench.
+Go forward until four chairs are on your left.
+Turn left toward the room entrance.
 Stop.
 """
 
